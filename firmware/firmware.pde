@@ -17,9 +17,9 @@ const int MuxR=0;
 const int MuxC=1;
 
 const int inh[]={10,11};
-const int a[]={5,8};
+const int a[]={3,6};
 const int b[]={4,7};
-const int c[]={3,6};
+const int c[]={5,8};
 const int   t=9;
 
 const int buttonPin = 2;
@@ -31,7 +31,6 @@ void setup() {
   {
       pinMode(i, OUTPUT);
   }
-  pinMode(buttonPin, INPUT);
   pinMode(ledPin, OUTPUT);
   
   //inhibit mux
@@ -71,15 +70,6 @@ void loop() {
         blinkLight(2);
       }
     }
-    
-    if(buttonDown())
-    {
-        printf("Button> yo bitches\n\r");
-        blinkLight(4);
-        setLight(true);
-        pressKey(0,0);
-        setLight(false);
-    }
 }
 
 void holdRowOrColumn(){
@@ -106,7 +96,7 @@ void pressRowColumn(){
   int iRow=cRow-'a';
   int iCol=cCol-'a';
   //printRemoteCommand(iRow,iCol);
-  printf("Remote> row:%d col:%d\n\r",iRow,iCol);
+  printf("(%c,%c)> row:%d col:%d\n\r",cRow,cCol,iRow,iCol);
   setLight(true);
   pressKey(iRow,iCol);
   setLight(false);
@@ -165,9 +155,9 @@ void setMuxCh(int mux,int ch){
   int B=(ch>>1)%2;
   int C=(ch>>2)%2;
   
-  printf("%s mux\n\r",mux==MuxR?"row":"col");
-  printf("[%d,%d,%d]\n\r",a[mux],b[mux],c[mux]);
-  printf("[%d,%d,%d]\n\r",A,B,C);
+  printf("   %s [C,B,A]\n\r",mux==MuxR?"row":"col");
+  printf("       [%d,%d,%d]\n\r",c[mux],b[mux],a[mux]);
+  printf("       [%d,%d,%d]\n\r",C,B,A);
   
   digitalWrite(a[mux], A==1);
   digitalWrite(b[mux], B==1);

@@ -1,0 +1,6 @@
+*.pyc
+*.[oa]
+*~
+.DS_Store
+.svn
+applet

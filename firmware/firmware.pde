@@ -17,13 +17,16 @@ const int MuxR=0;
 const int MuxC=1;
 const int MuxD=2  ;
 
-const int inh[]={8,9,8};
-const int a[]={2,5,10};
-const int b[]={3,6,11};
-const int c[]={4,7,12};
+const int inh[]={8,9};
+const int a[]={2,5};
+const int b[]={3,6};
+const int c[]={4,7};
 
 const int buttonPin = 2;
 const int ledPin =  13;
+const int doorPin =  10;
+const int greenOn =  11;
+const int greenOff =  12;
 
 void setup() {
   //set 2:11 pins to output
@@ -32,6 +35,9 @@ void setup() {
       pinMode(i, OUTPUT);
   }
   pinMode(ledPin, OUTPUT);
+  
+  //setupdoor
+  digitalWrite(doorPin, HIGH);
   
   //inhibit mux
   inhibitAll();
@@ -109,15 +115,16 @@ void processDevice(){
     true;//block till get what we need  
   char which = Serial.read();
  
-  if(which=='g' || which=='b'){
+  if(which=='g'){
     while(Serial.available() < 1) true;
-    int n= parse(Serial.read());
-    pressDevice(n-1+ (which=='g'?0:2));
-   printf("%c %d => %d",which,n,n-1+ (which=='g'?0:2));
+    boolean on= Serial.read()=='1';
+    greenThing(on);
+    printf("green thing: %s\n\r",on?"on":"off");
+    
   }else if(which=='d'){
-    pressDevice(4);
+    openDoor();
   }else{
-    printf("don't know %c",which);
+    printf("don't know %c\n\r",which);
   }
 }
 
@@ -169,6 +176,21 @@ void printRemoteCommand(int row,int col)
 8: [1, 0, 0, 0]
 */
 
+void openDoor(){
+  digitalWrite(doorPin,LOW);
+  delay(1000);
+  digitalWrite(doorPin,HIGH);
+}
+
+void greenThing(boolean on){
+  int pin=on?greenOn:greenOff;
+
+  digitalWrite(pin,HIGH);
+  delay(1000);
+  digitalWrite(pin,LOW);
+
+}
+
 void pressKey(int row,int col){
 
   if(row==5 && col!=4)
@@ -210,7 +232,7 @@ void inhibitAll(){
   //shut all down
   setMuxInh(MuxR,true);
   setMuxInh(MuxC,true);
-  setMuxCh(MuxD,7);//ch7 is N/C
+  //setMuxCh(MuxD,7);//ch7 is N/C
 }
 
 void setMuxCh(int mux,int ch){

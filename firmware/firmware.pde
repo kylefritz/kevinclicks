@@ -15,12 +15,12 @@ static int uart_putchar (char c, FILE *stream)
 
 const int MuxR=0;
 const int MuxC=1;
+const int MuxD=2  ;
 
-const int inh[]={10,11};
-const int a[]={3,6};
-const int b[]={4,7};
-const int c[]={5,8};
-const int   t=9;
+const int inh[]={8,9,8};
+const int a[]={2,5,10};
+const int b[]={3,6,11};
+const int c[]={4,7,12};
 
 const int buttonPin = 2;
 const int ledPin =  13;
@@ -65,6 +65,9 @@ void loop() {
         inhibitAll();
         printf("Remote> clear\n\r");
         blinkLight(3);
+      }else if(func=='d'){
+        /*device*/
+        processDevice();
       }else{
         printf("Remote> don't know function: %s\n\r",func);
         blinkLight(2);
@@ -75,31 +78,73 @@ void loop() {
 void holdRowOrColumn(){
   while(Serial.available() < 2)
     true;//block till get what we need
-  int mux = Serial.read() == 'r'?MuxR:MuxC;
-  int which = Serial.read() -'a';
+
+  char m=Serial.read();
+  char row[]="row";
+  char col[]="col";
+  char dev[]="dev";
+  char * label;
+  int mux;
+  if(m=='r'){
+      mux = MuxR;
+      label= row;
+  }else if(m=='c'){
+      mux = MuxC;    
+      label= col;
+  }else{
+      mux = MuxD;
+      label= dev;
+  }
   
+  int which = parse(Serial.read());
+  
+  printf("Remote> hold %s: %d\n\r",label,which);
   setMuxCh(mux,which);
-  
-  if(which==9)
-    setT(true);//transistor on
-  else
-    setMuxInh(mux,false);
-    
-  printf("Remote> hold %s: %d\n\r",mux==MuxR?"row":"col",which);
+  setMuxInh(mux,false);
+}
+
+void processDevice(){
+  //0=g1,1=g2,2=b1,3=b2,4=d
+  while(Serial.available() < 1)
+    true;//block till get what we need  
+  char which = Serial.read();
+ 
+  if(which=='g' || which=='b'){
+    while(Serial.available() < 1) true;
+    int n= parse(Serial.read());
+    pressDevice(n-1+ (which=='g'?0:2));
+   printf("%c %d => %d",which,n,n-1+ (which=='g'?0:2));
+  }else if(which=='d'){
+    pressDevice(4);
+  }else{
+    printf("don't know %c",which);
+  }
 }
 
 void pressRowColumn(){
   while(Serial.available() < 2)
     true;//block till get what we need
   char cRow = Serial.read();
-  char cCol = Serial.read();    
-  int iRow=cRow-'a';
-  int iCol=cCol-'a';
+  char cCol = Serial.read();
+  int iRow=parse(cRow);
+  int iCol=parse(cCol);
   //printRemoteCommand(iRow,iCol);
   printf("(%c,%c)> row:%d col:%d\n\r",cRow,cCol,iRow,iCol);
   setLight(true);
   pressKey(iRow,iCol);
   setLight(false);
+}
+
+int parse(char in){
+  char zero='0';
+  char A='A';
+  char a='a';
+  if(in >=a) //'a' -> 97
+    return in-a;
+  if(in>=A)//'A' -> 65
+    return in-A;
+    
+  return in-zero;//'0' -> 48
 }
 
 void printRemoteCommand(int row,int col)
@@ -126,20 +171,38 @@ void printRemoteCommand(int row,int col)
 
 void pressKey(int row,int col){
 
+  if(row==5 && col!=4)
+  {
+    printf("row 5 probably doesn't support col %d",col);
+    //return;
+  }else if(row>5)
+  {
+    printf("row %d not supported",row);
+    return;    
+  }
+  
   inhibitAll();//just in case, inhibit all
   
   setMuxCh(MuxR,row);
   setMuxCh(MuxC,col);
   
   setMuxInh(MuxR,false);//mux 1 on
-  if(col==9)
-    setT(true);//transistor on
-  else
-    setMuxInh(MuxC,false);//mux 2 on
+  setMuxInh(MuxC,false);//mux 2 on
     
-   delay(250);//250ms down
+  delay(250);//250ms down
     
   inhibitAll();
+}
+
+void pressDevice(int which){
+  
+  inhibitAll();//just in case, inhibit all
+  
+  setMuxCh(MuxD,which);
+  
+  delay(100);//250ms down
+    
+  inhibitAll();  
 }
 
 void inhibitAll(){
@@ -147,15 +210,24 @@ void inhibitAll(){
   //shut all down
   setMuxInh(MuxR,true);
   setMuxInh(MuxC,true);
-  setT(false);  
+  setMuxCh(MuxD,7);//ch7 is N/C
 }
 
 void setMuxCh(int mux,int ch){
   int A=(ch>>0)%2;
   int B=(ch>>1)%2;
   int C=(ch>>2)%2;
+
+  printf("   ");
+  if(mux==MuxR){
+      printf("row");
+  }else if(mux==MuxC){
+      printf("col");
+  }else{
+      printf("dev");
+  }
   
-  printf("   %s [C,B,A]\n\r",mux==MuxR?"row":"col");
+  printf(" [C,B,A]\n\r");
   printf("       [%d,%d,%d]\n\r",c[mux],b[mux],a[mux]);
   printf("       [%d,%d,%d]\n\r",C,B,A);
   
@@ -181,30 +253,8 @@ void setLight(boolean on)
   digitalWrite(ledPin, on);
 }
 
-void setT(boolean on){
-  digitalWrite(t, on);//transistor on
-}
-
 void setMuxInh(int mux,boolean inhibit){
     digitalWrite(inh[mux], inhibit);
 }
 
 
-boolean lastDown=false;
-
-boolean buttonDown(){
-
-  // read the state of the switch into a local variable:
-  int reading = digitalRead(buttonPin);
-  
-  if(reading==HIGH){
-    //button is down, check if first time in that state
-    boolean isFirstDown= lastDown==false;
-    lastDown=true;
-    return isFirstDown;
-  }else{
-    lastDown=false;
-    return false;
-  }
-
-}

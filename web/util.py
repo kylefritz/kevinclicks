@@ -1,5 +1,8 @@
 import logging,string,sys
 from logging.handlers import RotatingFileHandler, SMTPHandler
+import smtplib
+import email.MIMEMultipart
+import email.MIMEText
 
 def getLogger(appname):
   LOGFILE='%s.log'%appname
@@ -40,22 +43,19 @@ class fakeSerial():
   def close(self):
     self.log.debug('fake serial<<close')
 
-import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
 
 TO = "kyle.p.fritz@gmail.com"
 FROM = "email.robot@simplicitysignals.com"
 PWD = "robotpassword1984"
 
 def sendgmail(subject,body,EMAIL_TO=TO,EMAIL_USER=FROM,EMAIL_PWD=PWD):
-  msg = MIMEMultipart()
+  msg = email.MIMEMultipart.MIMEMultipart()
   
   msg['From'] = EMAIL_USER
   msg['To'] = EMAIL_TO
   msg['Subject'] = subject
   
-  msg.attach(MIMEText(body))
+  msg.attach(email.MIMEText.MIMEText(body))
   
   mailServer = smtplib.SMTP("smtp.gmail.com", 587)
   mailServer.ehlo()

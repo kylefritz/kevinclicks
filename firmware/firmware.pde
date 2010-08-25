@@ -115,13 +115,13 @@ void pressDevice(){
 	digitalWrite(pin,HIGH);
 	delay(1000);
 	digitalWrite(pin,LOW);
-    printf("OK: green %s\n",on?"on":"off");
+    printf("OK: green %d\n",pin);
   }else if(which=='d'){
     //openDoor => active low
 	digitalWrite(doorPin,LOW);
 	delay(1000);
 	digitalWrite(doorPin,HIGH);
-	printf("OK: door");
+	printf("OK: door\n");
   }else{
     printf("ERR: don't know %c\n",which);
   }

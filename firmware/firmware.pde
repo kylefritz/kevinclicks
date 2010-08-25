@@ -12,75 +12,66 @@ static int uart_putchar (char c, FILE *stream)
     return 0 ;
 }
 
-
 const int MuxR=0;
 const int MuxC=1;
-const int MuxD=2  ;
 
 const int inh[]={8,9};
 const int a[]={2,5};
 const int b[]={3,6};
 const int c[]={4,7};
 
-const int buttonPin = 2;
-const int ledPin =  13;
 const int doorPin =  10;
 const int greenOn =  11;
 const int greenOff =  12;
 
 void setup() {
-  //set 2:11 pins to output
-  for(int i=2;i<12;i++)
-  {
-      pinMode(i, OUTPUT);
-  }
-  pinMode(ledPin, OUTPUT);
+  //all pins default to output
   
-  //setupdoor
+  //setupdoor => active low
   digitalWrite(doorPin, HIGH);
   
   //inhibit mux
   inhibitAll();
   
-  //start serial port at 9600 bps:
-  Serial.begin(9600);
-  //Enable printf
-  //fill in the UART file descriptor with pointer to writer.
+  //start serial port at 115200 bps
+  Serial.begin(115200);
+  //Enable printf => fill in the UART file descriptor with pointer to writer.
   fdev_setup_stream (&uartout, uart_putchar, NULL, _FDEV_SETUP_WRITE);
 
   //The uart is the standard output device STDOUT.
   stdout = &uartout ;
 }
 
-char func =0;
-
-
 void loop() {
+	char func =0;
+	
     if (Serial.available() > 0) {
     // get incoming byte:
       func = Serial.read();
       if(func=='r'){
         /* Momentary Connect Row-Col */
         pressRowColumn();
-      }else if(func=='h'){
+      }
+#if DEBUG	  
+	  else if(func=='h'){
         /* HOLD */
         holdRowOrColumn();        
-        blinkLight(5);
       }else if(func=='c'){
         /* CLEAR */
         inhibitAll();
-        printf("Remote> clear\n\r");
-        blinkLight(3);
-      }else if(func=='d'){
+        printf("Remote> clear\n");
+      }
+#endif
+	  else if(func=='d'){
         /*device*/
-        processDevice();
+        pressDevice();
       }else{
-        printf("Remote> don't know function: %s\n\r",func);
-        blinkLight(2);
+        printf("ERR: don't know function: %s\n",func);
       }
     }
 }
 
+#if DEBUG
 void holdRowOrColumn(){
   while(Serial.available() < 2)
     true;//block till get what we need
@@ -104,12 +95,13 @@ void holdRowOrColumn(){
   
   int which = parse(Serial.read());
   
-  printf("Remote> hold %s: %d\n\r",label,which);
+  printf("Remote> hold %s: %d\n",label,which);
   setMuxCh(mux,which);
   setMuxInh(mux,false);
 }
+#endif
 
-void processDevice(){
+void pressDevice(){
   //0=g1,1=g2,2=b1,3=b2,4=d
   while(Serial.available() < 1)
     true;//block till get what we need  
@@ -117,14 +109,21 @@ void processDevice(){
  
   if(which=='g'){
     while(Serial.available() < 1) true;
-    boolean on= Serial.read()=='1';
-    greenThing(on);
-    printf("green thing: %s\n\r",on?"on":"off");
     
+	int pin=Serial.read()=='1'?greenOn:greenOff;
+	//green thing => active high
+	digitalWrite(pin,HIGH);
+	delay(1000);
+	digitalWrite(pin,LOW);
+    printf("OK: green %s\n",on?"on":"off");
   }else if(which=='d'){
-    openDoor();
+    //openDoor => active low
+	digitalWrite(doorPin,LOW);
+	delay(1000);
+	digitalWrite(doorPin,HIGH);
+	printf("OK: door");
   }else{
-    printf("don't know %c\n\r",which);
+    printf("ERR: don't know %c\n",which);
   }
 }
 
@@ -135,11 +134,37 @@ void pressRowColumn(){
   char cCol = Serial.read();
   int iRow=parse(cRow);
   int iCol=parse(cCol);
-  //printRemoteCommand(iRow,iCol);
+  
+#if DEBUG
   printf("(%c,%c)> row:%d col:%d\n\r",cRow,cCol,iRow,iCol);
-  setLight(true);
-  pressKey(iRow,iCol);
-  setLight(false);
+#endif
+
+  //press key
+  if(iRow>5)
+  {
+    printf("ERROR: row %d not supported\n",iRow);
+    return;    
+  }
+  
+  inhibitAll();//just in case, inhibit all
+  
+  setMuxCh(MuxR,iRow);
+  setMuxCh(MuxC,iCol);
+  
+  setMuxInh(MuxR,false);//mux 1 on
+  setMuxInh(MuxC,false);//mux 2 on
+    
+  delay(40);//40ms down
+    
+  inhibitAll();
+  
+  if(iRow==5 && iCol!=4)
+  {
+    printf("WARN: row 5 probably doesn't support col %d\n",iCol);
+    //return;
+  }else {
+	printf("OK: r%d c%d\n",iRow,iCol);
+  }
 }
 
 int parse(char in){
@@ -154,14 +179,11 @@ int parse(char in){
   return in-zero;//'0' -> 48
 }
 
-void printRemoteCommand(int row,int col)
-{
-  Serial.print("Remote> ");
-  Serial.print("row: ");
-  Serial.print(row, DEC);
-  Serial.print(" col: ");
-  Serial.println(col, DEC);       
-  Serial.print("\n\r");
+void inhibitAll(){
+  
+  //shut all down
+  setMuxInh(MuxR,true);
+  setMuxInh(MuxC,true);
 }
 
 /*
@@ -176,70 +198,12 @@ void printRemoteCommand(int row,int col)
 8: [1, 0, 0, 0]
 */
 
-void openDoor(){
-  digitalWrite(doorPin,LOW);
-  delay(1000);
-  digitalWrite(doorPin,HIGH);
-}
-
-void greenThing(boolean on){
-  int pin=on?greenOn:greenOff;
-
-  digitalWrite(pin,HIGH);
-  delay(1000);
-  digitalWrite(pin,LOW);
-
-}
-
-void pressKey(int row,int col){
-
-  if(row==5 && col!=4)
-  {
-    printf("row 5 probably doesn't support col %d",col);
-    //return;
-  }else if(row>5)
-  {
-    printf("row %d not supported",row);
-    return;    
-  }
-  
-  inhibitAll();//just in case, inhibit all
-  
-  setMuxCh(MuxR,row);
-  setMuxCh(MuxC,col);
-  
-  setMuxInh(MuxR,false);//mux 1 on
-  setMuxInh(MuxC,false);//mux 2 on
-    
-  delay(250);//250ms down
-    
-  inhibitAll();
-}
-
-void pressDevice(int which){
-  
-  inhibitAll();//just in case, inhibit all
-  
-  setMuxCh(MuxD,which);
-  
-  delay(100);//250ms down
-    
-  inhibitAll();  
-}
-
-void inhibitAll(){
-  
-  //shut all down
-  setMuxInh(MuxR,true);
-  setMuxInh(MuxC,true);
-  //setMuxCh(MuxD,7);//ch7 is N/C
-}
-
 void setMuxCh(int mux,int ch){
   int A=(ch>>0)%2;
   int B=(ch>>1)%2;
   int C=(ch>>2)%2;
 
+#if DEBUG 
   printf("   ");
   if(mux==MuxR){
       printf("row");
@@ -248,35 +212,17 @@ void setMuxCh(int mux,int ch){
   }else{
       printf("dev");
   }
-  
+
   printf(" [C,B,A]\n\r");
   printf("       [%d,%d,%d]\n\r",c[mux],b[mux],a[mux]);
   printf("       [%d,%d,%d]\n\r",C,B,A);
+#endif
   
   digitalWrite(a[mux], A==1);
   digitalWrite(b[mux], B==1);
   digitalWrite(c[mux], C==1);
 }
 
-void blinkLight(int times)
-{
-  int lightOnMs=100;
-  setLight(false);
-  for(int i=0;i<times;i++)
-  {
-    setLight(true);
-    delay(lightOnMs);
-    setLight(false);
-  }
-}
-
-void setLight(boolean on)
-{
-  digitalWrite(ledPin, on);
-}
-
 void setMuxInh(int mux,boolean inhibit){
     digitalWrite(inh[mux], inhibit);
 }
-
-

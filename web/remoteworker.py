@@ -47,7 +47,7 @@ if __name__ =="__main__":
     log.warn("using fake serial")
     getserial=lambda: util.fakeSerial(log)
   else:
-    getserial=lambda: serial.Serial(port=PORT, baudrate=9600,timeout=2)
+    getserial=lambda: serial.Serial(port=PORT, baudrate=115200,timeout=2)
     
   while True:
     try:

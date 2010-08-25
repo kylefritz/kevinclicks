@@ -2,18 +2,17 @@
 
 from bottle import send_file, redirect, abort, request, response, route, view, run
 from redis import Redis
-from datetime import datetime
-import json
-from commands import ALL_COMMANDS
+import util
 
 KEY_MAPPING="arduino:keymapping"
+ARDUINO_COMMAND="arduino:remote-command"
+LOG=util.getLogger('arduino_remote_server')
 
 @route('/op/:op', method='POST')
 def do_op(op):
 	r=Redis()
-		#r.rpush("arduino:remote-command",json.dumps({'op':op,'push-time':datetime.now().isoformat()}))
-	r.rpush("arduino:remote-command",op)
-		
+	r.rpush(ARDUINO_COMMAND,op)
+	LOG.info("got %s"%op)
 	return 'OK: %s'%op
 
 @route('/static/:filename')
@@ -30,7 +29,7 @@ def home():
 def remote():
 	r=Redis()
 	keysOp=r.hgetall(KEY_MAPPING)
-	allCommands=ALL_COMMANDS.split()
+	allCommands=util.ALL_COMMANDS.split()
 	return locals()
 	
 @route('/remote/train', method='get')
@@ -39,7 +38,7 @@ def remote_train():
 	r=Redis()
 	keysOp=r.hgetall(KEY_MAPPING)
 	opKeys=dict()
-	allCommands=ALL_COMMANDS.split()
+	allCommands=util.ALL_COMMANDS.split()
 	for k,v in keysOp.iteritems():
 		if opKeys.has_key(v):
 			opKeys[v]+=", %s"%k

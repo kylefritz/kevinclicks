@@ -20,7 +20,7 @@ class worker():
     
     try:
       self.serial.write(op)
-      line=self.serial.readline() #all responses are 1 line ending in \n now
+      line=self.serial.readline(eol='\r') #all responses are 1 line ending in \n\r now
       self.log.debug("%s> %s"% (op,line ))
     except SerialException:
       log.exception('exception> SerialException')

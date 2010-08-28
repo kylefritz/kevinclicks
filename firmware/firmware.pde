@@ -61,14 +61,17 @@ void loop() {
       }else if(func=='c'){
         /* CLEAR */
         inhibitAll();
-        printf("Remote> clear\n");
+        printf("Remote> clear\n\r");
       }
 #endif
-	  else if(func=='d'){
+      else if(func=='p'){
+        /*program*/
+        programRemote();
+      }else if(func=='d'){
         /*device*/
         pressDevice();
       }else{
-        printf("ERR: don't know function: %c\n",func);
+        printf("ERR: don't know function: %c\n\r",func);
       }
     }
 }
@@ -97,7 +100,7 @@ void holdRowOrColumn(){
   
   int which = parse(Serial.read());
   
-  printf("Remote> hold %s: %d\n",label,which);
+  printf("Remote> hold %s: %d\n\r",label,which);
   setMuxCh(mux,which);
   setMuxInh(mux,false);
 }
@@ -112,21 +115,72 @@ void pressDevice(){
   if(which=='g'){
     while(Serial.available() < 1) true;
     
-	int pin=Serial.read()=='1'?greenOn:greenOff;
-	//green thing => active high
-	digitalWrite(pin,HIGH);
-	delay(1000);
-	digitalWrite(pin,LOW);
-    printf("OK: green %d\n",pin);
+  int pin=Serial.read()=='1'?greenOn:greenOff;
+  //green thing => active high
+  digitalWrite(pin,HIGH);
+  delay(1000);
+  digitalWrite(pin,LOW);
+    printf("OK: green %d\n\r",pin);
   }else if(which=='d'){
     //openDoor => active low
-	digitalWrite(doorPin,LOW);
-	delay(1000);
-	digitalWrite(doorPin,HIGH);
-	printf("OK: door\n");
+  digitalWrite(doorPin,LOW);
+  delay(1000);
+  digitalWrite(doorPin,HIGH);
+  printf("OK: door\n\r");
   }else{
-    printf("ERR: don't know %c\n",which);
+    printf("ERR: don't know %c\n\r",which);
   }
+}
+
+/*
+send: p rc rc S (rc)+ \n
+first to R-C are held 'simulatnously' by flipping very fast for S seconds
+then following rcs are pressed for normal amount
+*/
+void programRemote(){
+    serialWaitFor(5);
+  
+    //rc rc S (rc)+ \n
+    int S=parse(Serial.read());
+    int b1r=parse(Serial.read());
+    int b1c=parse(Serial.read());
+    int b2r=parse(Serial.read());
+    int b2c=parse(Serial.read());
+    
+    //alternate to simulate holding for S seconds
+    unsigned long start = millis();
+    unsigned long duration = 1000*S;
+    //set inhibit off
+    setMuxInh(MuxR,false);//mux 1 on
+    setMuxInh(MuxC,false);//mux 2 on
+    bool is1=true;
+    while(millis()-start<duration){
+      if(is1){
+        setMuxCh(MuxR,b1r);
+        setMuxCh(MuxC,b1c);
+      }else{
+        setMuxCh(MuxR,b2r);
+        setMuxCh(MuxC,b2c);
+      }
+      is1= !is1;//swap
+    }
+    inhibitAll();
+    
+    serialWaitFor(1);
+    char r=Serial.read();
+
+    while(r!='\n'){
+      serialWaitFor(1);
+      int c=parse(Serial.read());
+      rc(parse(r),c);
+            
+      serialWaitFor(1);
+      r=Serial.read();
+    }
+}
+
+void serialWaitFor(int waitFor){
+  while(Serial.available() < waitFor) true;
 }
 
 void pressRowColumn(){
@@ -138,35 +192,39 @@ void pressRowColumn(){
   int iCol=parse(cCol);
   
 #if DEBUG
-  printf("(%c,%c)> row:%d col:%d\n\r",cRow,cCol,iRow,iCol);
+  printf("(%c,%c)> row:%d col:%d\n\r\r",cRow,cCol,iRow,iCol);
 #endif
 
   //press key
   if(iRow>5)
   {
-    printf("ERROR: row %d not supported\n",iRow);
+    printf("ERROR: row %d not supported\n\r",iRow);
     return;    
   }
   
+  rc(iRow,iCol);
+  
+  if(iRow==5 && iCol!=4)
+  {
+    printf("WARN: row 5 probably doesn't support col %d\n\r",iCol);
+    //return;
+  }else {
+	printf("OK: r%d c%d\n\r",iRow,iCol);
+  }
+}
+
+void rc(int r,int c,int del=40){
   inhibitAll();//just in case, inhibit all
   
-  setMuxCh(MuxR,iRow);
-  setMuxCh(MuxC,iCol);
+  setMuxCh(MuxR,r);
+  setMuxCh(MuxC,c);
   
   setMuxInh(MuxR,false);//mux 1 on
   setMuxInh(MuxC,false);//mux 2 on
     
-  delay(40);//40ms down
+  delay(del);//~40ms down
     
   inhibitAll();
-  
-  if(iRow==5 && iCol!=4)
-  {
-    printf("WARN: row 5 probably doesn't support col %d\n",iCol);
-    //return;
-  }else {
-	printf("OK: r%d c%d\n",iRow,iCol);
-  }
 }
 
 int parse(char in){
@@ -215,7 +273,7 @@ void setMuxCh(int mux,int ch){
       printf("dev");
   }
 
-  printf(" [C,B,A]\n\r");
+  printf(" [C,B,A]\n\r\r");
   printf("       [%d,%d,%d]\n\r",c[mux],b[mux],a[mux]);
   printf("       [%d,%d,%d]\n\r",C,B,A);
 #endif

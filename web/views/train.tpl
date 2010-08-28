@@ -28,6 +28,15 @@
 			}
 		});
 		
+		$('#send').button().click(function(){
+			var val=$('#anycode').val();
+			if(val!=null||val!=''){
+				$.post('/op/'+val,function(){
+					$('#result').show().delay(500).fadeOut();
+				})
+			}
+		})
+		
 	});
   </script>
 	<style type="text/css">
@@ -62,12 +71,12 @@
  </head>
  <body>
 	<div id="intro">
-		<big>Train it</big> <a href="/op/dg0">green on</a> |  <a href="/op/dg1">green off</a> | <a href="/op/dd">door</a>
+		<big>Train it</big> <a href="/op/dg0">green 0</a> |  <a href="/op/dg1">green 1</a> | <a href="/op/dd">door</a>
 
 	</div>
-	
- <table id="matrix">
-  %for row in range(6):
+<div id="matrix">
+	<table >
+	 %for row in range(6):
 	<tr>
 	%for col in range(8):
 		%hashkey='r%s%s'%(row,col)
@@ -83,10 +92,18 @@
 		</td>
 	%end
 	</tr>
-  %end
-  </table>
+	 %end
+	 </table>
+	<br/>
+	<input id="anycode" placeholder="send any code" />
+	<span id="send">send</span>
+	<span id="result" style="display:none;color:red">sent!</span>
+	<br/>
+	<small>p rc rc S (rc)+ \n</small>
+	<br/>
+	<small>rRC</small>
+</div>
 
-  
 <ul id="commands">
 %for cmd in allCommands:
 	<li>{{cmd}}</li>

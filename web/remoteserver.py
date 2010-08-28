@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 
-from bottle import send_file, redirect, abort, request, response, route, view, run
+from bottle import send_file, redirect, abort, request, response, route, view
 from redis import Redis
 import util, json
 
@@ -23,16 +23,17 @@ def static_file(filename):
 
 @route('/')
 def home():
-	return redirect('/remote/train')
+	return redirect('/remote')
 
-@route('/remote', method='get')
+@route('/remote(\/)?', method='get')
 @view('remote')
 def remote():
 	r=Redis()
+	mappings=r.smembers(KEY_POSITIONS)
 	keysOp=r.hgetall(KEY_MAPPING)
 	allCommands=util.ALL_COMMANDS.split()
 	return locals()
-	
+
 @route('/remote/train', method='get')
 @view('train')
 def remote_train():
@@ -75,9 +76,8 @@ def which_position(mapping):
 	position=json.loads(request.POST['position'])
 	r=Redis()
 	r.hmset(KEY_POSITION_FMT%mapping,position)
+	r.sadd(KEY_POSITIONS,mapping)
 	return 'ok'
-	
-	
 	
 #auth 
 @route('/hello/cookie')
@@ -95,6 +95,17 @@ def wrong():
 def restricted():
 	abort(401, "Sorry, access denied.") 
 
+class StripPathMiddleware(object):
+  def __init__(self, app):
+    self.app = app
+  def __call__(self, e, h):
+    e['PATH_INFO'] = e['PATH_INFO'].rstrip('/')
+    return self.app(e,h)
+
+
+
 import bottle
+app = bottle.app()
+myapp = StripPathMiddleware(app)
 bottle.debug(True)
-run(host='localhost', port=8080,reloader=True)
+bottle.run(app=myapp,host='localhost', port=8080,reloader=True)

@@ -17,14 +17,19 @@ class worker():
       self.serial= self.getserial();
       #todo: don't return multi line output, so don't have to wait on timeout
       time.sleep(1.5) #hang on for serial port to start up
-      
-    self.serial.write(op)
-      
-    self.log.debug("sent %s"%op)
+    
+    try:
+      self.serial.write(op)
+      line=self.serial.readline() #all responses are 1 line ending in \n now
+      self.log.debug("%s> %s"% (op,line ))
+    except SerialException:
+      log.exception('exception> SerialException')
+      self.redis.lpush("arduino:remote-command",op) #push op back on
+      self.serial=None #let serial get remade next time
     
   def work(self):
     while True:
-      item=self.redis.blpop("arduino:remote-command",timeout=1);
+      item=self.redis.blpop("arduino:remote-command",timeout=5);
       if item:
         self.misses=0
         self.handleItem(item[1]) #0=> key
@@ -41,13 +46,9 @@ if __name__ =="__main__":
   rdb=Redis()
   
   #setup serial
-  PORT="COM3"
+  PORT="COM4" #kevin is on COM4
   MISSLIMIT=10000000000
-  if len(sys.argv) > 1 and sys.argv[1]=='fake':
-    log.warn("using fake serial")
-    getserial=lambda: util.fakeSerial(log)
-  else:
-    getserial=lambda: serial.Serial(port=PORT, baudrate=115200,timeout=2)
+  getserial=lambda: serial.Serial(port=PORT, baudrate=115200,timeout=2)
     
   while True:
     try:

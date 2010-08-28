@@ -5,7 +5,7 @@ import email.MIMEMultipart
 import email.MIMEText
 
 def getLogger(appname):
-  LOGFILE='%s.log'%appname
+  LOGFILE=r'C:\Remote\ArduinoRemote.git\%s.log'%appname #kevin's install is there
 
   # Set up logging
   log = logging.getLogger(appname)
@@ -33,16 +33,6 @@ def getLogger(appname):
   log.exception=newEx
   
   return log
-  
-class fakeSerial():
-  def __init__(self,log):
-    self.log=log
-    self.log.debug('fake serial>>open')
-  def write(self,op):
-    self.log.debug('fake serial> %s'%op)
-  def close(self):
-    self.log.debug('fake serial<<close')
-
 
 TO = "kyle.p.fritz@gmail.com"
 FROM = "email.robot@simplicitysignals.com"

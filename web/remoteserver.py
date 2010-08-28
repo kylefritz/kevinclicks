@@ -2,9 +2,11 @@
 
 from bottle import send_file, redirect, abort, request, response, route, view, run
 from redis import Redis
-import util
+import util, json
 
 KEY_MAPPING="arduino:keymapping"
+KEY_POSITIONS="arduino:keypositions"
+KEY_POSITION_FMT="arduino:keyposition:%s"
 ARDUINO_COMMAND="arduino:remote-command"
 LOG=util.getLogger('arduino_remote_server')
 
@@ -22,7 +24,6 @@ def static_file(filename):
 @route('/')
 def home():
 	return redirect('/remote/train')
-
 
 @route('/remote', method='get')
 @view('remote')
@@ -53,13 +54,29 @@ def remote_train_update():
 	for key in request.POST['unset'].split(','):
 		r.hdel(KEY_MAPPING,key.strip())
 	return 'ok'
-	
 
-@route('/hello/template/:names')
-@view('hello')
-def remote_trainer(names):
-	names = names.split(',')
-	return dict(title='Hello World', names=names)
+@route('/remote/position', method='get')
+@view('position')
+def position():
+	r=Redis()
+	mappings=r.smembers(KEY_POSITIONS)
+	keysOp=r.hgetall(KEY_MAPPING)
+	allCommands=util.ALL_COMMANDS.split()
+	return locals()
+	
+@route('/remote/position/:mapping', method='get')
+def which_position(mapping):
+	r=Redis()
+	position=r.hgetall(KEY_POSITION_FMT%mapping)
+	return json.dumps(position)
+	
+@route('/remote/position/:mapping', method='post')
+def which_position(mapping):
+	position=json.loads(request.POST['position'])
+	r=Redis()
+	r.hmset(KEY_POSITION_FMT%mapping,position)
+	return 'ok'
+	
 	
 	
 #auth 

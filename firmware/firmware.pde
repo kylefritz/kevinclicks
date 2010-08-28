@@ -25,7 +25,9 @@ const int greenOn =  11;
 const int greenOff =  12;
 
 void setup() {
-  //all pins default to output
+  //set pins to output
+  for(int i=2;i<13;i++)
+      pinMode(i, OUTPUT);
   
   //setupdoor => active low
   digitalWrite(doorPin, HIGH);
@@ -66,7 +68,7 @@ void loop() {
         /*device*/
         pressDevice();
       }else{
-        printf("ERR: don't know function: %s\n",func);
+        printf("ERR: don't know function: %c\n",func);
       }
     }
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python 
 
-from bottle import send_file, redirect, abort, request, response, route, view
+from bottle import send_file, redirect, abort, request, response, route, view,error
 from redis import Redis
 import util, json
 
@@ -11,11 +11,18 @@ ARDUINO_COMMAND="arduino:remote-command"
 LOG=util.getLogger('arduino_remote_server')
 
 @route('/op/:op', method='POST')
-def do_op(op):
+@route('/op/:op/:repeat', method='POST')
+def do_op(op,repeat='1'):
 	r=Redis()
-	r.rpush(ARDUINO_COMMAND,op)
-	LOG.info("got %s"%op)
-	return 'OK: %s'%op
+	try:
+	  repeat=int(repeat)
+	except ValueError:
+	  repeat=1
+	for _ in range(repeat):
+	  r.rpush(ARDUINO_COMMAND,op)
+	
+	LOG.info("got %s, repeats %s"%(op,repeat))
+	return 'OK: %s x %s'%(op,repeat)
 
 @route('/static/:filename')
 def static_file(filename):
@@ -25,7 +32,7 @@ def static_file(filename):
 def home():
 	return redirect('/remote')
 
-@route('/remote(\/)?', method='get')
+@route('/remote', method='get')
 @view('remote')
 def remote():
 	r=Redis()
@@ -69,7 +76,7 @@ def position():
 def which_position(mapping):
 	r=Redis()
 	position=r.hgetall(KEY_POSITION_FMT%mapping)
-	return json.dumps(position)
+	return json.dumps(position) #should be auto-json?
 	
 @route('/remote/position/:mapping', method='post')
 def which_position(mapping):
@@ -78,7 +85,36 @@ def which_position(mapping):
 	r.hmset(KEY_POSITION_FMT%mapping,position)
 	r.sadd(KEY_POSITIONS,mapping)
 	return 'ok'
-	
+
+
+
+from bottle import request, response, abort
+
+def auth_required(users, realm='Secure Area'):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            name, password = request.auth()
+            if name not in users or users[name] != password:
+                response.headers['WWW-Authenticate'] = 'Basic realm="%s"' % realm
+                abort('401', 'Access Denied. You need to login first.')
+            kwargs['user'] = name
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@route('/secure/area')
+@auth_required(users={'Bob':'1234'})
+def secure_area(user):
+    print 'Hello %s' % user
+
+# @error(404)
+# def error404(error):
+#     return 'Nothing here, sorry'
+
+@error(401)
+def error401(error):
+    return 'login bastard'
+
 #auth 
 @route('/hello/cookie')
 def cookie():
@@ -103,9 +139,9 @@ class StripPathMiddleware(object):
     return self.app(e,h)
 
 
-
-import bottle
-app = bottle.app()
-myapp = StripPathMiddleware(app)
-bottle.debug(True)
-bottle.run(app=myapp,host='localhost', port=8080,reloader=True)
+if __name__=="__main__":
+	import bottle
+	app = bottle.app()
+	myapp = StripPathMiddleware(app)
+	bottle.debug(True)
+	bottle.run(app=myapp,host='localhost', port=8080,reloader=True)

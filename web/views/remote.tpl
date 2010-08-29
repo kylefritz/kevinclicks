@@ -86,7 +86,8 @@
 			%haskey=keysOp.has_key(cmd)
 			<li id="{{cmd}}" class="{{'set' if haskey else 'unset'}}">
 				%if haskey:
-				<a href="{{'/op/%s'%keysOp[cmd]}}">{{cmd}} </a> <span class="cmd">{{ ' %s'%keysOp[cmd]}}</span>
+				%repeats= 3 if cmd.startswith('Vol') else 1
+				<a href="{{'/op/%s/%s'%(keysOp[cmd],repeats)}}">{{cmd}} </a> <span class="cmd">{{ ' %s'%keysOp[cmd]}}</span>
 				%else:
 					{{cmd}}
 				%end

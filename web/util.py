@@ -5,7 +5,10 @@ import email.MIMEMultipart
 import email.MIMEText
 
 def getLogger(appname):
-  LOGFILE=r'C:\Remote\ArduinoRemote.git\%s.log'%appname #kevin's install is there
+  if(sys.platform=='darwin'):
+    LOGFILE=r'%s.log'%appname #mac
+  else:
+    LOGFILE=r'C:\Remote\ArduinoRemote.git\%s.log'%appname #kevin's install is there
 
   # Set up logging
   log = logging.getLogger(appname)
@@ -14,7 +17,7 @@ def getLogger(appname):
   filehander.setFormatter(logging.Formatter("%(asctime)s %(levelname)s > %(message)s"))
   console = logging.StreamHandler()
   console.setFormatter(logging.Formatter("%(asctime)s > %(message)s"))
-  log.addHandler(console)  
+  log.addHandler(console)
   log.addHandler(filehander)
   log.info("starting up %s!!"%appname)
   

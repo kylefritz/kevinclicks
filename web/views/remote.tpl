@@ -1,7 +1,16 @@
-<html>
- <head>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" >
+<head>
+	<!-- 
+	don't know why but setting the doc-type screws up element sizing :(
+	-->
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.6;" />
   <title>Remote</title>
-	<meta name="viewport" value="width = device-width, user-scalable = no" />
+	<meta name="viewport" value="width=320;user-scalable=no" >
+	
+	<link rel="icon" type="image/ico" href="/static/head-16.gif" />
+	<link rel="apple-touch-icon" href="/static/head-114.png" />
+	
   <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.3/themes/base/jquery-ui.css" type="text/css" media="all" /> 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript" ></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js" type="text/javascript" ></script>
@@ -49,14 +58,12 @@
   </script>
 	<style type="text/css">
 		body{margin:0;}
-		#space,#matrix,#commands{
-			float:left;
-			margin-right:6px;
-		}
 		#space{
 			width:300px;
 			height:450px;
+			margin-bottom:40px;
 		}
+		#commands{margin:0px;height:0px;padding:0;}
 		#commands li{
 			display:inline-block;
 			width:60px;
@@ -68,14 +75,13 @@
 			-webkit-border-radius:10px;
 			border-radius: 15px;
 			position:absolute;
-			float:left;
 		}
 		#commands li.unset{
 			background:red;
 			opacity:.4;
 		}
 		#aux{
-			clear:both;
+			width:300px;
 		}
 	</style>
  </head>
@@ -98,6 +104,7 @@
 			<li id="d"><a href="/op/dd">door</a></li>	
 		</ul>
 	</div>
+
 	<div id="aux">
 		<select style="font-size:1.4em">
 			%for mapping in mappings:
@@ -107,6 +114,8 @@
 		<span id="load">load</span>
 		<br/>	
 		<span id="togglecommands">cmds</span>
+		<br/>
+		<a href="/remote/position">edit profiles</a>
 	</div>
  </body>
 </html>

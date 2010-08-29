@@ -9,10 +9,7 @@
   <script type="text/javascript">
 	$(function(){
 		
-		$('a').click(function(e){
-			e.preventDefault();
-			$.post($(this).attr('href'));
-		})
+
 		$cmd=$('.cmd').hide();
 		$('#togglecommands').button().toggle(function(){$cmd.show();},function(){$cmd.hide();})
 		
@@ -120,15 +117,15 @@
 		%haskey=keysOp.has_key(cmd)
 		<li id="{{cmd}}" class="{{'set' if haskey else 'unset'}}">
 			%if haskey:
-			<a href="{{'/op/%s'%keysOp[cmd]}}">{{cmd}} </a> <span class="cmd">{{ ' %s'%keysOp[cmd]}}</span>
+			{{cmd}} <span class="cmd">{{ ' %s'%keysOp[cmd]}}</span>
 			%else:
 				{{cmd}}
 			%end
 		</li>
 	%end
-		<li id="g0"><a href="/op/dg0">green 0</a></li>
-		<li id="g1"><a href="/op/dg1">green 1</a></li>
-		<li id="d"><a href="/op/dd">door</a></li>	
+		<li id="g0">green 0 <span class="cmd">dg0</span></li>
+		<li id="g1">green 1 <span class="cmd">dg1</span></li>
+		<li id="d">door <span class="cmd">dd</span></li>	
 
 	</ul>
 	<div style="clear:both;float:left">
@@ -141,6 +138,8 @@
 			%end
 		</select>
 		<span id="load">load</span>
+		<br/>
+		<a href="/remote">try it out</a>
 	</div>
 	
 	<div id="namedlg" style="display:none" title="Name your position">

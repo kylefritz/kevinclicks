@@ -824,6 +824,9 @@ class Request(threading.local, DictMixin):
     def get_cookie(self, name, secret=None):
         """ Return the (decoded) value of a cookie. """
         value = self.COOKIES.get(name)
+        #kpf: dont decode None cookie
+        if value is None:
+          return None
         dec = cookie_decode(value, secret) if secret else None
         return dec or value
 

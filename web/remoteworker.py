@@ -20,8 +20,8 @@ class worker():
     
     try:
       self.serial.write(op)
-      line=self.serial.readline(eol='\r') #all responses are 1 line ending in \n\r now
-      self.log.debug("%s> %s"% (op,line ))
+      #line=self.serial.readline(eol='\r') #all responses are 1 line ending in \n\r now
+      #self.log.debug("%s> %s"% (op,line ))
     except serial.SerialException:
       log.exception('exception> SerialException')
       self.redis.lpush("arduino:remote-command",op) #push op back on

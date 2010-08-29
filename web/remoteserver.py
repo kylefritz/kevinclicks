@@ -1,17 +1,61 @@
 #!/usr/bin/env python 
 
-from bottle import send_file, redirect, abort, request, response, route, view,error
+from bottle import *
 from redis import Redis
 import util, json
+from time import strftime,gmtime,time
 
 KEY_MAPPING="arduino:keymapping"
 KEY_POSITIONS="arduino:keypositions"
 KEY_POSITION_FMT="arduino:keyposition:%s"
 ARDUINO_COMMAND="arduino:remote-command"
 LOG=util.getLogger('arduino_remote_server')
+AUTH_COOKIE='remote-auth'
+COOKIE_SECRET='laksdjalkdnqwoeiqwenjnlaksndlkadnlakmcmzc'
+PASSWORD="ooja"
 
-@route('/op/:op', method='POST')
-@route('/op/:op/:repeat', method='POST')
+def auth_required():
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            authd=request.get_cookie(AUTH_COOKIE,secret=COOKIE_SECRET)
+            if authd !=PASSWORD:
+              redirect('/login')
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+def getRelativeCookieTime(days):
+  return strftime("%a, %d-%b-%Y %H:%M:%S GMT", gmtime(days*24*60*60+time()))
+
+from bottle import get, post, request
+
+@get('/login')
+def login_form():
+    return '''<h1>Login!</h1>
+              <form method="POST">
+                <input name="password" placeholder="password" type="password" />
+              </from>'''
+
+@post('/login')
+def login_submit():
+    password = request.forms.get('password')
+    if password==PASSWORD:
+        response.set_cookie (secret=COOKIE_SECRET,key=AUTH_COOKIE, \
+        value=password,path="/",expires=getRelativeCookieTime(60))
+        redirect('/')
+    else:
+        return "<p>Nope! <a href='/login'>try again</a></p>"
+
+@get('/logout')
+def logout():
+    response.set_cookie (secret=COOKIE_SECRET,key='remote-auth', \
+    value="",path="/",expires=getRelativeCookieTime(-1))
+    return "<p>You're logged out!</p>"
+
+
+@post('/op/:op')
+@post('/op/:op/:repeat')
+@auth_required()
 def do_op(op,repeat='1'):
 	r=Redis()
 	try:
@@ -24,16 +68,24 @@ def do_op(op,repeat='1'):
 	LOG.info("got %s, repeats %s"%(op,repeat))
 	return 'OK: %s x %s'%(op,repeat)
 
-@route('/static/:filename')
+@get('/static/:filename')
 def static_file(filename):
 	send_file(filename, root='static')
+	
+@get('/favicon.ico')
+def favicon():
+	send_file("head-16.gif", root='static')
+
+
 
 @route('/')
+@auth_required()
 def home():
 	return redirect('/remote')
 
 @route('/remote', method='get')
 @view('remote')
+@auth_required()
 def remote():
 	r=Redis()
 	mappings=r.smembers(KEY_POSITIONS)
@@ -43,6 +95,7 @@ def remote():
 
 @route('/remote/train', method='get')
 @view('train')
+@auth_required()
 def remote_train():
 	r=Redis()
 	keysOp=r.hgetall(KEY_MAPPING)
@@ -56,6 +109,7 @@ def remote_train():
 	return locals()
 
 @route('/remote/train', method='POST')
+@auth_required()
 def remote_train_update():
 	r=Redis()
 	r.hset(KEY_MAPPING,request.POST['key'].strip(),request.POST['op'].strip())
@@ -65,6 +119,7 @@ def remote_train_update():
 
 @route('/remote/position', method='get')
 @view('position')
+@auth_required()
 def position():
 	r=Redis()
 	mappings=r.smembers(KEY_POSITIONS)
@@ -73,12 +128,14 @@ def position():
 	return locals()
 	
 @route('/remote/position/:mapping', method='get')
+@auth_required()
 def which_position(mapping):
 	r=Redis()
 	position=r.hgetall(KEY_POSITION_FMT%mapping)
 	return json.dumps(position) #should be auto-json?
 	
 @route('/remote/position/:mapping', method='post')
+@auth_required()
 def which_position(mapping):
 	position=json.loads(request.POST['position'])
 	r=Redis()
@@ -87,26 +144,6 @@ def which_position(mapping):
 	return 'ok'
 
 
-
-from bottle import request, response, abort
-
-def auth_required(users, realm='Secure Area'):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            name, password = request.auth()
-            if name not in users or users[name] != password:
-                response.headers['WWW-Authenticate'] = 'Basic realm="%s"' % realm
-                abort('401', 'Access Denied. You need to login first.')
-            kwargs['user'] = name
-            return func(*args, **kwargs)
-        return wrapper
-    return decorator
-
-@route('/secure/area')
-@auth_required(users={'Bob':'1234'})
-def secure_area(user):
-    print 'Hello %s' % user
-
 # @error(404)
 # def error404(error):
 #     return 'Nothing here, sorry'
@@ -114,22 +151,6 @@ def secure_area(user):
 @error(401)
 def error401(error):
     return 'login bastard'
-
-#auth 
-@route('/hello/cookie')
-def cookie():
-	name = request.COOKIES.get('name', 'Stranger')
-	response.headers['Content-Type'] = 'text/plain'
-	return 'Hello, %s' % name
-
-	
-@route('/wrong/url')
-def wrong():
-	redirect("/right/url")
-
-@route('/restricted')
-def restricted():
-	abort(401, "Sorry, access denied.") 
 
 class StripPathMiddleware(object):
   def __init__(self, app):

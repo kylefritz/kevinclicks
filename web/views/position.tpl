@@ -5,9 +5,14 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript" ></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js" type="text/javascript" ></script>
   <script src="/static/json2.min.js" type="text/javascript" ></script>
+ <script type="text/javascript" src="/static/farbtastic.js"></script>
+ <link rel="stylesheet" href="/static/farbtastic.css" type="text/css" />  
 
   <script type="text/javascript">
 	$(function(){
+		
+		$('#picker').farbtastic('#color');
+	
 		
 
 		$cmd=$('.cmd').hide();
@@ -128,6 +133,12 @@
 		<li id="d">door <span class="cmd">dd</span></li>	
 
 	</ul>
+	
+	<div style="width:500px;float:left;">
+	<div class="form-item"><label for="color">Color:</label><input type="text" id="color" name="color" value="#123456" /></div>
+	<div id="picker"></div>
+	</div>
+	
 	<div style="clear:both;float:left">
 		<span id="resize">toggle resize</span>
 		<span id="togglecommands">toggle cmds</span>

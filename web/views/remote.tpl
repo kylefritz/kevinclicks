@@ -38,12 +38,18 @@
 				var sp=$('#space').position();
 				for(key in dict){
 					var $i=$('#'+key);
-					var vals=dict[key].split(',');
-					//pop in reverse order
-					$i.width(vals.pop());
-					$i.height(vals.pop());
-					$i.css('top',parseInt(vals.pop())+sp.top);
+					var vals=dict[key].split(',').reverse();
+										
 					$i.css('left',parseInt(vals.pop())+sp.left);
+					$i.css('top',parseInt(vals.pop())+sp.top);
+					$i.height(vals.pop());
+					$i.width(vals.pop());
+
+					if(vals.length>0){
+					  //set color
+					  $i.css('background',vals.pop());
+					}
+					
 				}
 			});
 		};

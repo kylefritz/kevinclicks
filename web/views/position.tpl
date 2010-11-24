@@ -11,16 +11,23 @@
   <script type="text/javascript">
 	$(function(){
 		
-		$('#picker').farbtastic('#color');
-	
+		var btn=null;
 		
+		$('#picker').farbtastic(function(color){
+		  if(btn==null) return;
+		  
+		  btn.background=color;
+		  $(btn).css('background',color);
+		});
 
 		$cmd=$('.cmd').hide();
 		$('#togglecommands').button().toggle(function(){$cmd.show();},function(){$cmd.hide();})
 		
-		$('#space').resizable({maxWidth: 300,minWidth: 300})
-		
-		$('#commands li').draggable(); //.resizable()
+		$('#commands li').draggable().click(function(){
+		  $('.selected').removeClass('selected');
+		  btn=this;
+		  $(this).addClass('selected');
+		});
 		$('#resize').button().toggle(
 			function(){$('#commands li').resizable({ disabled: false });},
 			function(){$('#commands li').resizable({ disabled: true });}
@@ -36,6 +43,10 @@
 				$this=$(this);
 				var pos=$this.position();
 				positions[this.id]= (pos.left-sp.left)+","+(pos.top-sp.top)+","+$this.height()+","+$this.width();
+				if(this.background){
+				  //add in color
+				  positions[this.id]+=","+this.background;
+				}
 			})
 			positions['space']=$space.height()+","+320;//only set height
 			var name=$('#namedlg input').val();
@@ -55,17 +66,23 @@
 					var sp=$('#space').position();
 					for(key in dict){
 						var $i=$('#'+key);
-						var vals=dict[key].split(',');
-						//pop in reverse order
-						$i.width(vals.pop());
-						$i.height(vals.pop());
-						$i.css('top',parseInt(vals.pop())+sp.top);
+						var vals=dict[key].split(',').reverse(); //pop in reverse order
+
 						$i.css('left',parseInt(vals.pop())+sp.left);
+						$i.css('top',parseInt(vals.pop())+sp.top);
+						$i.height(vals.pop());
+						$i.width(vals.pop());
+
+						if(vals.length>0){
+						  //set color
+						  $i.css('background',vals.pop());
+						}
 					}
 				});
 			};
 
 			$('#load').button().click(loadPostion);
+			
 			if($('select').val()!=null)
 				loadPostion();
 		
@@ -78,13 +95,16 @@
 			margin-right:6px;
 		}
 		#space{
+		  float:left;
 			width:300px;
 			height:450px;
 			border:1px solid black;
 			background:#DEF;
 		}
 		#commands{
-			width:325px;
+		  float:left;
+		  height:100px;
+			width:175px;
 			margin:0;
 			padding:0;
 		}
@@ -106,6 +126,9 @@
 		}
 		.ui-state-disabled{
 			opacity:1;
+		}
+		#commands li.selected{
+		  border:3px solid yellow;
 		}
 	</style>
  </head>
@@ -134,8 +157,7 @@
 
 	</ul>
 	
-	<div style="width:500px;float:left;">
-	<div class="form-item"><label for="color">Color:</label><input type="text" id="color" name="color" value="#123456" /></div>
+	<div style="float:left;">
 	<div id="picker"></div>
 	</div>
 	

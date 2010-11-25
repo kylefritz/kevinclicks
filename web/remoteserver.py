@@ -3,7 +3,7 @@
 from bottle import *
 from redis import Redis
 import util, json
-from time import strftime,gmtime,time
+from time import strftime,gmtime,time,sleep
 
 KEY_MAPPING="arduino:keymapping"
 KEY_POSITIONS="arduino:keypositions"
@@ -149,9 +149,13 @@ def which_position(mapping):
 def post_key(key):
 	r=Redis()
 	ops=r.hget(KEY_MAPPING,key)
-	for op in ops.split(','):
-		cmd=r.hget(KEY_MAPPING,op)
-		r.rpush(ARDUINO_COMMAND,cmd)
+	if ',' in ops:
+		for op in ops.split(','):
+			cmd=r.hget(KEY_MAPPING,op)
+			r.rpush(ARDUINO_COMMAND,cmd)
+			sleep(.25)
+	else:
+		r.rpush(ARDUINO_COMMAND,ops)
 	
 	return 'ok'
 

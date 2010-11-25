@@ -19,15 +19,8 @@
 		  btn.background=color;
 		  $(btn).css('background',color);
 		});
-
-		$cmd=$('.cmd').hide();
-		$('#togglecommands').button().toggle(function(){$cmd.show();},function(){$cmd.hide();})
 		
-		$('#commands li').draggable().click(function(){
-		  $('.selected').removeClass('selected');
-		  btn=this;
-		  $(this).addClass('selected');
-		});
+    $('#space').resizable();
 		$('#resize').button().toggle(
 			function(){$('#commands li').resizable({ disabled: false });},
 			function(){$('#commands li').resizable({ disabled: true });}
@@ -38,20 +31,25 @@
 		var $savebtn=$('#namedlg span').button().click(function(){
 			var positions={};
 			$space=$('#space');
-			var sp=$space.position();
+			var all={}
+			all['space-height']=$space.height();
+			
 			$('#commands li').each(function(){
 				$this=$(this);
+				var d={};
 				var pos=$this.position();
-				positions[this.id]= (pos.left-sp.left)+","+(pos.top-sp.top)+","+$this.height()+","+$this.width();
-				if(this.background){
-				  //add in color
-				  positions[this.id]+=","+this.background;
-				}
+				d.left=pos.left;
+				d.top=pos.top;
+				d.height=$this.height();
+				d.width=$this.width();
+				d.color=$this.css('background');
+				all[$this.text()]=d;
+
 			})
-			positions['space']=$space.height()+","+320;//only set height
+
 			var name=$('#namedlg input').val();
-			$.post('/remote/position/'+name,{position:JSON.stringify(positions)})
-			$savedlg.dialog('close')
+			$.post('/positions/'+name,{position:JSON.stringify(all)});
+			$savedlg.dialog('close');
 		});
 
 		$('#savepositions').button().click(function(){
@@ -61,24 +59,32 @@
 			});
 		
 			var loadPostion=function(){
-				$.get('/remote/position/'+$('select').val(),function(data){
-					var dict=JSON.parse(data);
-					var sp=$('#space').position();
+				$.get('/positions/'+$('select').val(),function(data){
+				  dict=JSON.parse(data);
+				  
+				  //set space size
+				  $('#space').height(dict['space-height']);
+				  delete dict['space-height'];
+          
+					var $sp=$('#commands').empty();
 					for(key in dict){
-						var $i=$('#'+key);
-						var vals=dict[key].split(',').reverse(); //pop in reverse order
-
-						$i.css('left',parseInt(vals.pop())+sp.left);
-						$i.css('top',parseInt(vals.pop())+sp.top);
-						$i.height(vals.pop());
-						$i.width(vals.pop());
-
-						if(vals.length>0){
-						  //set color
-						  $i.css('background',vals.pop());
-						}
+					  var el=dict[key];
+					  var li=$('<li/>').text(key)
+					  .height(el.height)
+					  .width(el.width)
+					  .css('top',el.top)
+					  .css('left',el.left)
+					  .css('background',el.color);
+					  $sp.append(li)
 					}
-				});
+					
+					//wire draggable
+					$('#commands li').draggable().click(function(){
+      		  $('.selected').removeClass('selected');
+      		  btn=this;
+      		  $(this).addClass('selected');
+      		});
+				});				
 			};
 
 			$('#load').button().click(loadPostion);
@@ -133,28 +139,11 @@
 	</style>
  </head>
  <body>
-	<div id="intro">
-		<big>Position Keys</big> 
-	</div>
 	<div id="space">
 		
 	</div>
 
 	<ul id="commands">
-	%for cmd in allCommands:
-		%haskey=keysOp.has_key(cmd)
-		<li id="{{cmd}}" class="{{'set' if haskey else 'unset'}}">
-			%if haskey:
-			{{cmd}} <span class="cmd">{{ ' %s'%keysOp[cmd]}}</span>
-			%else:
-				{{cmd}}
-			%end
-		</li>
-	%end
-		<li id="g0">green 0 <span class="cmd">dg0</span></li>
-		<li id="g1">green 1 <span class="cmd">dg1</span></li>
-		<li id="d">door <span class="cmd">dd</span></li>	
-
 	</ul>
 	
 	<div style="float:left;">
@@ -163,7 +152,6 @@
 	
 	<div style="clear:both;float:left">
 		<span id="resize">toggle resize</span>
-		<span id="togglecommands">toggle cmds</span>
 		<span id="savepositions">save positions</span>
 		<select style="font-size:1.4em">
 			%for mapping in mappings:

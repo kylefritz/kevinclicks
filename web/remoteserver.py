@@ -144,6 +144,68 @@ def which_position(mapping):
 	return 'ok'
 
 
+#use a key
+@post('/key/:key')
+def post_key(key):
+	r=Redis()
+	ops=r.hget(KEY_MAPPING,key)
+	for op in ops.split(','):
+		cmd=r.hget(KEY_MAPPING,op)
+		r.rpush(ARDUINO_COMMAND,cmd)
+	
+	return 'ok'
+
+#get positions
+@get('/positions/:position')
+def get_positions(position):
+	r=Redis()
+	
+	spositions=r.get("remote:positionsjson:%s"%position)
+	if spositions:
+		positions=json.loads(spositions)
+	else:
+		 positions={}
+	
+	keys=r.hkeys(KEY_MAPPING)
+	
+	for key in keys:
+		if key not in positions.keys():
+			positions[key]={'width':100,'height':15,'top':0,'left':300,'color':'#FFFFFF'}
+			
+	return json.dumps(positions)
+
+#set positions
+@post('/positions/:position')
+def post_positions(position):
+	r=Redis()
+	positions=r.set("remote:positionsjson:%s"%position,request.POST['position'])
+	return 'OK'
+
+#get mapping
+@get('/mapping')
+@view('mapping')
+def get_mapping():
+	r=Redis()
+	mapping=json.dumps(r.hgetall(KEY_MAPPING)).replace("{","{\n").replace(", ",",\n").replace("}","\n}")
+	return locals()
+	
+#set mapping
+@post('/mapping')
+def post_mapping():
+	try:
+		mapping=json.loads(request.POST['mapping'])
+	except:
+		return "NO DICE"
+	
+	r=Redis()
+	for k,v in mapping.items():
+		r.hset(KEY_MAPPING,k,v)
+	
+	LOG.info(mapping)	
+	return 'OK'
+
+
+
 # @error(404)
 # def error404(error):
 #     return 'Nothing here, sorry'

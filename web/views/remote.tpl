@@ -16,42 +16,36 @@
   <script type="text/javascript">
 	$(function(){
 		
-		var postA = function(a){ $.post(a.href); }
-		
-		$('#commands li a').click(function(e){
-			e.preventDefault();
-		});
-		
-		$('#commands li').click(function(e){
-			var atag=$(this).find('a:eq(0)');
-			if( atag.length==1){
-				postA(atag.get(0));
-			}
-		});
-		
-		$cmd=$('.cmd').hide();
-		$('#togglecommands').button().toggle(function(){$cmd.show();},function(){$cmd.hide();})
-		
 		var loadPostion=function(){
-			$.get('/remote/position/'+$('select').val(),function(data){
-				var dict=JSON.parse(data);
-				var sp=$('#space').position();
+			$.get('/positions/'+$('select').val(),function(data){
+			  dict=JSON.parse(data);
+			  
+			  //set space size
+			  $('#space').height(dict['space-height']);
+			  delete dict['space-height'];
+        
+        //get keys and positions
+				var $sp=$('#commands').empty();
 				for(key in dict){
-					var $i=$('#'+key);
-					var vals=dict[key].split(',').reverse();
-										
-					$i.css('left',parseInt(vals.pop())+sp.left);
-					$i.css('top',parseInt(vals.pop())+sp.top);
-					$i.height(vals.pop());
-					$i.width(vals.pop());
-
-					if(vals.length>0){
-					  //set color
-					  $i.css('background',vals.pop());
-					}
-					
+				  var el=dict[key];
+				  var li=$('<li/>').text(key)
+				  .height(el.height)
+				  .width(el.width)
+				  .css('top',el.top)
+				  .css('left',el.left)
+				  .css('background',el.color);
+				  $sp.append(li)
 				}
-			});
+				
+				//wire action
+				$('#commands li').click(function(){
+				  $this=$(this);
+				  var url='/key/'+$this.text()
+				  console.log(url);
+				  $.post(url)
+    		});
+    		
+			});				
 		};
 		
 		$('#load').button().click(loadPostion);
@@ -82,10 +76,6 @@
 			-moz-user-select:none;
 			-webkit-user-select:none;
 		}
-		#commands li.unset{
-			background:red;
-			opacity:.4;
-		}
 		#aux{
 			width:300px;
 		}
@@ -94,20 +84,6 @@
  <body>
 	<div id="space">
 		<ul id="commands">
-		%for cmd in allCommands:
-			%haskey=keysOp.has_key(cmd)
-			<li id="{{cmd}}" class="{{'set' if haskey else 'unset'}}">
-				%if haskey:
-				%repeats= 9 if cmd.startswith('Vol') else 1
-				<a href="{{'/op/%s/%s'%(keysOp[cmd],repeats)}}">{{cmd}} </a> <span class="cmd">{{ ' %s'%keysOp[cmd]}}</span>
-				%else:
-					{{cmd}}
-				%end
-			</li>
-		%end
-			<li id="g0"><a href="/op/dg0">green 0</a></li>
-			<li id="g1"><a href="/op/dg1">green 1</a></li>
-			<li id="d"><a href="/op/dd">door</a></li>	
 		</ul>
 	</div>
 
@@ -118,8 +94,6 @@
 			%end
 		</select>
 		<span id="load">load</span>
-		<br/>	
-		<span id="togglecommands">cmds</span>
 		<br/>
 		<a href="/remote/position">edit profiles</a>
 	</div>

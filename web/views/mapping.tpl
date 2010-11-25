@@ -11,6 +11,8 @@
         $.post('/mapping',{mapping:$('textarea').val()},function(data){
           if(data!="OK"){
             alert('sorry, that didnt save');
+          }else{
+            window.location="/remote/position";
           }
         });
       })

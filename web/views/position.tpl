@@ -47,19 +47,16 @@
 
 			})
 
-			var name=$('#namedlg input').val();
-			$.post('/positions/'+name,{position:JSON.stringify(all)});
+			$.post('/positions',{position:JSON.stringify(all)});
 			$savedlg.dialog('close');
 		});
 
 		$('#savepositions').button().click(function(){
-			if($('select').val()!=null)
-				$('#namedlg input').val($('select').val());
 			$savedlg.dialog('open');
 			});
 		
 			var loadPostion=function(){
-				$.get('/positions/'+$('select').val(),function(data){
+				$.get('/positions',function(data){
 				  dict=JSON.parse(data);
 				  
 				  //set space size
@@ -89,13 +86,12 @@
 
 			$('#load').button().click(loadPostion);
 			
-			if($('select').val()!=null)
-				loadPostion();
+			loadPostion();
 		
 	});
   </script>
 	<style type="text/css">
-	body{margin:0;padding:0;}
+	  body{margin:0;background:black;font-family:arial;}
 		#space,#matrix,#commands{
 			float:left;
 			margin-right:6px;
@@ -153,18 +149,10 @@
 	<div style="clear:both;float:left">
 		<span id="resize">toggle resize</span>
 		<span id="savepositions">save positions</span>
-		<select style="font-size:1.4em">
-			%for mapping in mappings:
-				<option>{{mapping}}</option>
-			%end
-		</select>
-		<span id="load">load</span>
-		<br/>
 		<a href="/remote">try it out</a>
+		<a href="/mapping">edit mapping</a>
 	</div>
-	
-	<div id="namedlg" style="display:none" title="Name your position">
-		<input value="ooja" />
+	<div id="namedlg" style="display:none" title="?">
 		<span>save</span>
 	</div>
 	

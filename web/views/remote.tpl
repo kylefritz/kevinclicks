@@ -17,7 +17,7 @@
 	$(function(){
 		
 		var loadPostion=function(){
-			$.get('/positions/'+$('select').val(),function(data){
+			$.get('/positions',function(data){
 			  dict=JSON.parse(data);
 			  
 			  //set space size
@@ -48,14 +48,12 @@
 			});				
 		};
 		
-		$('#load').button().click(loadPostion);
-		if($('select').val()!=null)
-			loadPostion();
+		loadPostion();
 		
 	});
   </script>
 	<style type="text/css">
-		body{margin:0;}
+		body{margin:0;background:black;font-family:arial;}
 		#space{
 			width:300px;
 			height:450px;
@@ -67,7 +65,7 @@
 			width:60px;
 			padding:4px;
 			margin:4px;
-			border:1px solid black;
+			border:1px solid white;
 			background:white;
 			-moz-border-radius:10px;
 			-webkit-border-radius:10px;
@@ -86,16 +84,9 @@
 		<ul id="commands">
 		</ul>
 	</div>
-
+<hl/>
 	<div id="aux">
-		<select style="font-size:1.4em">
-			%for mapping in mappings:
-				<option>{{mapping}}</option>
-			%end
-		</select>
-		<span id="load">load</span>
-		<br/>
-		<a href="/remote/position">edit profiles</a>
+		<a href="/remote/position">edit position</a>
 	</div>
  </body>
 </html>

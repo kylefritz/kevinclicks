@@ -156,11 +156,11 @@ def post_key(key):
 	return 'ok'
 
 #get positions
-@get('/positions/:position')
-def get_positions(position):
+@get('/positions')
+def get_positions():
 	r=Redis()
 	
-	spositions=r.get("remote:positionsjson:%s"%position)
+	spositions=r.get("remote:positionsjson")
 	if spositions:
 		positions=json.loads(spositions)
 	else:
@@ -175,10 +175,10 @@ def get_positions(position):
 	return json.dumps(positions)
 
 #set positions
-@post('/positions/:position')
-def post_positions(position):
+@post('/positions')
+def post_positions():
 	r=Redis()
-	positions=r.set("remote:positionsjson:%s"%position,request.POST['position'])
+	positions=r.set("remote:positionsjson",request.POST['position'])
 	return 'OK'
 
 #get mapping

@@ -149,14 +149,11 @@ def which_position(mapping):
 def post_key(key):
 	r=Redis()
 	ops=r.hget(KEY_MAPPING,key)
-	if ',' in ops:
-		for op in ops.split(','):
-			cmd=r.hget(KEY_MAPPING,op)
-			r.rpush(ARDUINO_COMMAND,cmd)
-			sleep(.25)
-	else:
-		r.rpush(ARDUINO_COMMAND,ops)
-	
+	for op in ops.split(','):
+		cmd=r.hget(KEY_MAPPING,op)
+		r.rpush(ARDUINO_COMMAND,cmd if cmd else op)
+		sleep(.25)
+
 	return 'ok'
 
 #get positions

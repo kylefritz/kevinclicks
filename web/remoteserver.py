@@ -205,7 +205,26 @@ def post_mapping():
 	LOG.info(mapping)	
 	return 'OK'
 
+#get mapping
+@get('/positionedit')
+@view('positionedit')
+def get_positionedit():
+	r=Redis()
+	positionedit=r.get("remote:positionsjson").replace("\n","").replace("\r","").replace("{","{\n").replace("}","\n}").replace(",\"",",\n\"")
+	return locals()
 
+#set mapping
+@post('/positionedit')
+def post_positionedit():
+	try:
+		mapping=json.loads(request.POST['positionedit'])
+	except:
+		return "NO DICE"
+
+	r=Redis()
+	r.set("remote:positionsjson",request.POST['positionedit'])
+
+	return 'OK'
 
 # @error(404)
 # def error404(error):

@@ -151,6 +151,7 @@
 		<span id="savepositions">save positions</span>
 		<a href="/remote">try it out</a>
 		<a href="/mapping">edit mapping</a>
+	  <a href="/positionedit">delete stuff</a>
 	</div>
 	<div id="namedlg" style="display:none" title="?">
 		<span>save</span>

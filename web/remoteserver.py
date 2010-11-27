@@ -76,8 +76,6 @@ def static_file(filename):
 def favicon():
 	send_file("head-16.gif", root='static')
 
-
-
 @route('/')
 @auth_required()
 def home():
@@ -150,9 +148,13 @@ def post_key(key):
 	r=Redis()
 	ops=r.hget(KEY_MAPPING,key)
 	for op in ops.split(','):
-		cmd=r.hget(KEY_MAPPING,op)
-		r.rpush(ARDUINO_COMMAND,cmd if cmd else op)
-		sleep(.25)
+		match=re.match('^pause(\d*\.?\d*)',op)
+		if match:
+			sleep(float(match.groups()[0]))
+		else:
+			cmd=r.hget(KEY_MAPPING,op)
+			r.rpush(ARDUINO_COMMAND,cmd if cmd else op)
+			sleep(.25)
 
 	return 'ok'
 

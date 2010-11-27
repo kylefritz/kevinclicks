@@ -91,7 +91,7 @@
 	});
   </script>
 	<style type="text/css">
-	  body{margin:0;background:black;font-family:arial;}
+	  body{margin:0;background:black;font-family:arial;font-size:14pt;}
 		#space,#matrix,#commands{
 			float:left;
 			margin-right:6px;

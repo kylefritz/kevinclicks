@@ -199,6 +199,7 @@ def post_mapping():
 		return "NO DICE"
 	
 	r=Redis()
+	r.delete(KEY_MAPPING)
 	for k,v in mapping.items():
 		r.hset(KEY_MAPPING,k,v)
 	

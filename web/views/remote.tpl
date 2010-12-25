@@ -67,7 +67,9 @@
 			margin-bottom:40px;
 		}
 		#commands{margin:0px;height:0px;padding:0;}
+		#commands li:hover{opacity:.9;cursor:pointer;}
 		#commands li{
+			text-align: center;
 			display:inline-block;
 			width:60px;
 			padding:4px;

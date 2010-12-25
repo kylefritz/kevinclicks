@@ -9,24 +9,26 @@
  <link rel="stylesheet" href="/static/farbtastic.css" type="text/css" />  
 
   <script type="text/javascript">
+  	invert = function($t){
+	var color = $t.css("background-color");
+	var p = /rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/.exec(color);
+	var i = "rgb("+(255-parseInt(p [1]))+", "+(255-parseInt(p [2]))+", "+(255-parseInt(p [3]))+")";
+	$t.css("color",i);
+	}
+  
+  
 	$(function(){
-		
-		var btn=null;
-		
-		$('#picker').farbtastic(function(color){
-		  if(btn==null) return;
-		  
-		  btn.background=color;
-		  $(btn).css('background',color);
+			
+		$('#picker').farbtastic(function(color){ 
+		  invert($('.selected').css('background',color));
 		});
+			
+		$('#space').resizable();
+			$('#resize').button().toggle(
+				function(){$('#commands li').resizable({ disabled: false });},
+				function(){$('#commands li').resizable({ disabled: true });}
+				);
 		
-    $('#space').resizable();
-		$('#resize').button().toggle(
-			function(){$('#commands li').resizable({ disabled: false });},
-			function(){$('#commands li').resizable({ disabled: true });}
-			);
-
-
 		$savedlg=$('#namedlg').dialog({autoOpen: false, modal:true});
 		var $savebtn=$('#namedlg span').button().click(function(){
 			var positions={};
@@ -72,15 +74,18 @@
 					  .css('top',el.top)
 					  .css('left',el.left)
 					  .css('background',el.color);
-					  $sp.append(li)
+					  $sp.append(li);
+					  invert(li);
 					}
 					
 					//wire draggable
-					$('#commands li').draggable().click(function(){
-      		  $('.selected').removeClass('selected');
-      		  btn=this;
-      		  $(this).addClass('selected');
-      		});
+					$('#commands li').draggable().click(function(e){
+						if(!e.shiftKey){
+							$('.selected').removeClass('selected');
+						}
+						$(this).addClass('selected');
+					});
+					
 				});				
 			};
 
@@ -92,6 +97,7 @@
   </script>
 	<style type="text/css">
 	  body{margin:0;background:black;font-family:arial;font-size:14pt;}
+	  a:visited,a{color:white;}
 		#space,#matrix,#commands{
 			float:left;
 			margin-right:6px;
@@ -104,13 +110,18 @@
 			background:#DEF;
 		}
 		#commands{
+		  -moz-user-select: none;
+          -webkit-user-select: none;
 		  float:left;
 		  height:100px;
-			width:175px;
-			margin:0;
-			padding:0;
+		  width:175px;
+		  margin:0;
+		  padding:0;
 		}
 		#commands li{
+		    -moz-user-select: none;
+            -webkit-user-select: none;
+			text-align: center;
 			display:inline-block;
 			width:60px;
 			padding:4px;

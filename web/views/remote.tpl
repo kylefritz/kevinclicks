@@ -14,11 +14,16 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript" ></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js" type="text/javascript" ></script>
   <script type="text/javascript">
-	invert = function($t){
-	var color = $t.css("background-color");
-	var p = /rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/.exec(color);
-	var i = "rgb("+(255-parseInt(p [1]))+", "+(255-parseInt(p [2]))+", "+(255-parseInt(p [3]))+")";
-	$t.css("background-color",i);
+	invert = function(c){
+		var p = /rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/.exec(c);
+		return "rgb("+(255-parseInt(p [1]))+", "+(255-parseInt(p [2]))+", "+(255-parseInt(p [3]))+")";
+	}
+  
+	toggleInvert = function($t){
+		var color = $t.css("background-color");
+		var i = invert(color);
+		$t.css("background-color",i);
+		$t.css("color",color);
 	}
 	$(function(){
 		
@@ -41,15 +46,16 @@
 				  .css('left',el.left)
 				  .css('background',el.color);
 				  $sp.append(li)
+				  li.css('color',invert(li.css('background-color')));
 				}
 				
 				//wire action
 				$('#commands li').click(function(){
 				  var $this=$(this);
-				  invert($(this));
+				  toggleInvert($(this));
 				  var url='/key/'+$this.text();
 				  console.log(url);
-				  $.post(url,null,function(){invert($this);});
+				  $.post(url,null,function(){toggleInvert($this);});
     		});
     		
 			});				
@@ -61,14 +67,23 @@
   </script>
 	<style type="text/css">
 		body{margin:0;background:black;font-family:arial;font-size:14pt;}
+		a:visited,a{color:white;}
 		#space{
 			width:300px;
 			height:450px;
 			margin-bottom:40px;
 		}
-		#commands{margin:0px;height:0px;padding:0;}
+		#commands{
+			-moz-user-select: none;
+			-webkit-user-select: none;	
+			margin:0px;
+			height:0px;
+			padding:0;
+		}
 		#commands li:hover{opacity:.9;cursor:pointer;}
 		#commands li{
+			-moz-user-select: none;
+            -webkit-user-select: none;
 			text-align: center;
 			display:inline-block;
 			width:60px;

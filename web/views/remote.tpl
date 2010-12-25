@@ -14,6 +14,12 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript" ></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js" type="text/javascript" ></script>
   <script type="text/javascript">
+	invert = function($t){
+	var color = $t.css("background-color");
+	var p = /rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/.exec(color);
+	var i = "rgb("+(255-parseInt(p [1]))+", "+(255-parseInt(p [2]))+", "+(255-parseInt(p [3]))+")";
+	$t.css("background-color",i);
+	}
 	$(function(){
 		
 		var loadPostion=function(){
@@ -39,10 +45,11 @@
 				
 				//wire action
 				$('#commands li').click(function(){
-				  $this=$(this);
-				  var url='/key/'+$this.text()
+				  var $this=$(this);
+				  invert($(this));
+				  var url='/key/'+$this.text();
 				  console.log(url);
-				  $.post(url)
+				  $.post(url,null,function(){invert($this);});
     		});
     		
 			});				

@@ -66,7 +66,7 @@
 	});
   </script>
 	<style type="text/css">
-		body{margin:0;background:black;font-family:arial;font-size:14pt;}
+		body{margin:0;background:#555;font-family:arial;font-size:14pt;}
 		a:visited,a{color:white;}
 		#space{
 			width:300px;
@@ -80,7 +80,7 @@
 			height:0px;
 			padding:0;
 		}
-		#commands li:hover{opacity:.9;cursor:pointer;}
+		#commands li:hover{opacity:.5;cursor:pointer;}
 		#commands li{
 			-moz-user-select: none;
             -webkit-user-select: none;
@@ -89,7 +89,7 @@
 			width:60px;
 			padding:4px;
 			margin:4px;
-			border:1px solid white;
+			border:3px solid black;
 			background:white;
 			-moz-border-radius:10px;
 			-webkit-border-radius:10px;

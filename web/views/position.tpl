@@ -24,11 +24,15 @@
 		});
 			
 		$('#space').resizable();
-			$('#resize').button().toggle(
-				function(){$('#commands li').resizable({ disabled: false });},
-				function(){$('#commands li').resizable({ disabled: true });}
-				);
-		
+		$('#resize').button().toggle(
+			function(){$('#commands li').resizable({ disabled: false });},
+			function(){$('#commands li').resizable({ disabled: true });}
+		);
+		$('#commands li').live('resize',function(evt,ui){
+			var $this=$(this);
+			$('.selected').css({height:$this.height(),width:$this.width()});
+		});
+	
 		$savedlg=$('#namedlg').dialog({autoOpen: false, modal:true});
 		var $savebtn=$('#namedlg span').button().click(function(){
 			var positions={};
@@ -96,7 +100,7 @@
 	});
   </script>
 	<style type="text/css">
-	  body{margin:0;background:black;font-family:arial;font-size:14pt;}
+	  body{margin:0;background:#555;font-family:arial;font-size:14pt;}
 	  a:visited,a{color:white;}
 		#space,#matrix,#commands{
 			float:left;
@@ -126,7 +130,7 @@
 			width:60px;
 			padding:4px;
 			margin:4px;
-			border:1px solid black;
+			border:3px solid black;
 			background:white;
 			-moz-border-radius:10px;
 			-webkit-border-radius:10px;

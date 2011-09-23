@@ -21,4 +21,11 @@ and sends them via serial to the Arduino
 
 Controls a bunch of stuff via a series of muxes
 
+##Getting started
 
+To run the software part:
+
+`pip install -r software/requirements.txt`
+
+
+For the hardware part, try to follow the Fritzing File `remote.tf`

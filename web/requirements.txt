@@ -1,0 +1,4 @@
+Bottle >= 0.8.2
+Redis >= 2.0.0
+PyYaml >= 2.0.0
+PySerial >=2.0.0

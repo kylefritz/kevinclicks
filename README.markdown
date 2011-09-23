@@ -28,4 +28,4 @@ To run the software part:
 `pip install -r software/requirements.txt`
 
 
-For the hardware part, try to follow the Fritzing File `remote.tf`
+For the hardware part, try to follow the Fritzing File `remote.fz`

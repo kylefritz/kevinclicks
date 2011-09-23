@@ -25,7 +25,7 @@ Controls a bunch of stuff via a series of muxes
 
 To run the software part:
 
-`pip install -r software/requirements.txt`
+`pip install -r requirements.txt`
 
 
 For the hardware part, try to follow the Fritzing File `remote.fz`

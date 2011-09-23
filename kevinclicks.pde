@@ -132,6 +132,20 @@ void pressDevice(){
   }
 }
 
+void rc(int r,int c,int del=40){
+  inhibitAll();//just in case, inhibit all
+  
+  setMuxCh(MuxR,r);
+  setMuxCh(MuxC,c);
+  
+  setMuxInh(MuxR,false);//mux 1 on
+  setMuxInh(MuxC,false);//mux 2 on
+    
+  delay(del);//~40ms down
+    
+  inhibitAll();
+}
+
 /*
 send: p rc rc S (rc)+ \n
 first to R-C are held 'simulatnously' by flipping very fast for S seconds
@@ -213,19 +227,6 @@ void pressRowColumn(){
   }
 }
 
-void rc(int r,int c,int del=40){
-  inhibitAll();//just in case, inhibit all
-  
-  setMuxCh(MuxR,r);
-  setMuxCh(MuxC,c);
-  
-  setMuxInh(MuxR,false);//mux 1 on
-  setMuxInh(MuxC,false);//mux 2 on
-    
-  delay(del);//~40ms down
-    
-  inhibitAll();
-}
 
 int parse(char in){
   char zero='0';

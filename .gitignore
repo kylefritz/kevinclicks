@@ -1,7 +1,10 @@
+config.yaml
+*.log
+dist
+build
 *.pyc
 *.[oa]
 *~
 .DS_Store
-.svn
 applet
 *.log

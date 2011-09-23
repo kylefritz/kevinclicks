@@ -10,14 +10,14 @@ class worker():
     self.getserial=getserial
     self.misslimit=misslimit
     self.log=log
-    
+
   def handleItem(self,op):
     if self.serial is None:
       self.log.debug("opened serial port")
       self.serial= self.getserial();
       #todo: don't return multi line output, so don't have to wait on timeout
       time.sleep(1.5) #hang on for serial port to start up
-    
+
     try:
       self.serial.write(op)
       #line=self.serial.readline(eol='\r') #all responses are 1 line ending in \n\r now
@@ -26,7 +26,7 @@ class worker():
       log.exception('exception> SerialException')
       self.redis.lpush("arduino:remote-command",op) #push op back on
       self.serial=None #let serial get remade next time
-    
+
   def work(self):
     while True:
       item=self.redis.blpop("arduino:remote-command",timeout=5);
@@ -44,12 +44,12 @@ if __name__ =="__main__":
   log=util.getLogger('arduino_remote_worker')
   #set up redis
   rdb=Redis()
-  
+
   #setup serial
-  PORT="COM4" #kevin is on COM4
+  PORT=util.CONFIG['hardware']['port'] #kevin is on COM4
   MISSLIMIT=10000000000
   getserial=lambda: serial.Serial(port=PORT, baudrate=115200,timeout=2)
-    
+
   while True:
     try:
       worker(rdb,log,MISSLIMIT,getserial).work()

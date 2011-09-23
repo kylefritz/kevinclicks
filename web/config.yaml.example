@@ -1,0 +1,10 @@
+web:
+    password: secretword
+    cookie: 01293jlkaskjnfdlk1231039ulkdnaskdfasf;asfj;lk
+hardware:
+    port: COM4
+email:
+    from: email.robot@example.com
+    password: robotpassword
+    to: your-email@example.com
+

@@ -3,6 +3,14 @@ from logging.handlers import RotatingFileHandler, SMTPHandler
 import smtplib
 import email.MIMEMultipart
 import email.MIMEText
+import yaml
+
+try:
+    CONFIG=yaml.load(open('config.yaml'))
+except IOError:
+    print """you haven't set up your own local config.yaml using example (which probably won't work)"""
+    CONFIG=yaml.load(open('config.yaml.example'))
+
 
 def getLogger(appname):
   if(sys.platform=='darwin'):
@@ -20,7 +28,7 @@ def getLogger(appname):
   log.addHandler(console)
   log.addHandler(filehander)
   log.info("starting up %s!!"%appname)
-  
+
   #switch out exception handling
   oldEx=log.exception
   def newEx(msg):
@@ -32,24 +40,24 @@ def getLogger(appname):
     except:
       pass
     sendgmail("arduino_remote_worker exception %s"%sys.exc_info()[0],contents)
-  
+
   log.exception=newEx
-  
+
   return log
 
-TO = "kyle.p.fritz@gmail.com"
-FROM = "email.robot@simplicitysignals.com"
-PWD = "robotpassword1984"
+TO = CONFIG['email']['to']
+FROM = CONFIG['email']['from']
+PW = CONFIG['email']['password']
 
-def sendgmail(subject,body,EMAIL_TO=TO,EMAIL_USER=FROM,EMAIL_PWD=PWD):
+def sendgmail(subject,body,EMAIL_TO=TO,EMAIL_USER=FROM,EMAIL_PWD=PW):
   msg = email.MIMEMultipart.MIMEMultipart()
-  
+
   msg['From'] = EMAIL_USER
   msg['To'] = EMAIL_TO
   msg['Subject'] = subject
-  
+
   msg.attach(email.MIMEText.MIMEText(body))
-  
+
   mailServer = smtplib.SMTP("smtp.gmail.com", 587)
   mailServer.ehlo()
   mailServer.starttls()
@@ -58,8 +66,8 @@ def sendgmail(subject,body,EMAIL_TO=TO,EMAIL_USER=FROM,EMAIL_PWD=PWD):
   mailServer.sendmail(EMAIL_USER, EMAIL_TO, msg.as_string())
   mailServer.close()
 
-	
-    
+
+
 ALL_COMMANDS="""power   
 star    
 ticker  

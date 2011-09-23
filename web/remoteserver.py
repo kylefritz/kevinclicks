@@ -11,8 +11,8 @@ KEY_POSITION_FMT="arduino:keyposition:%s"
 ARDUINO_COMMAND="arduino:remote-command"
 LOG=util.getLogger('arduino_remote_server')
 AUTH_COOKIE='remote-auth'
-COOKIE_SECRET='laksdjalkdnqwoeiqwenjnlaksndlkadnlakmcmzc'
-PASSWORD="ooja"
+COOKIE_SECRET=util.CONFIG['web']['cookie']
+PASSWORD=util.CONFIG['web']['password']
 
 def auth_required():
     def decorator(func):
